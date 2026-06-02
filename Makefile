@@ -5,7 +5,8 @@ CFLAGS = -Wall -O3
 # In Fedora, pkg-config can sometimes omit the path -I /usr/include/ffmpeg.
 # Therefore, we are also adding Fedora's custom fallback path to CFLAGS.
 PKG_CFLAGS = $(shell pkg-config --cflags libavformat libavcodec libswscale libavutil 2>/dev/null)
-CFLAGS += $(PKG_CFLAGS) -I/usr/include/ffmpeg
+CFLAGS += $(PKG_CFLAGS) 
+CFLAGS += -I/usr/include -I/usr/include/ffmpeg
 
 # Define the dynamic libraries (Shared Objects) to connect to.
 LIBS = $(shell pkg-config --libs libavformat libavcodec libswscale libavutil 2>/dev/null || echo "-lavformat -lavcodec -lswscale -lavutil")
