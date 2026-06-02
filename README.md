@@ -39,9 +39,9 @@ sudo dnf install pkgconf-pkg-config
 sudo dnf swap ffmpeg-free ffmpeg --allowerasing
 ```
 
-# 4. Install developer headers (-devel), the libx264 engine, and freeworld codecs.
+# 4. Install the developer headers and the libx264 engine.
 ```bash
-sudo dnf install ffmpeg-devel libavcodec-devel libavformat-devel libswscale-devel libavutil-devel x264 x264-libs libavcodec-freeworld
+sudo dnf install ffmpeg-devel x264 x264-libs libavcodec-freeworld
 ```
 
 ## If you want to build manually:
