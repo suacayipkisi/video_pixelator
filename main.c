@@ -42,59 +42,65 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    // Girdi Video Dekoder Ayarları
     AVCodecParameters *in_codec_par = in_format_ctx->streams[video_stream_idx]->codecpar;
     const AVCodec *in_codec = avcodec_find_decoder(in_codec_par->codec_id);
     AVCodecContext *in_codec_ctx = avcodec_alloc_context3(in_codec);
     avcodec_parameters_to_context(in_codec_ctx, in_codec_par);
     avcodec_open2(in_codec_ctx, in_codec, NULL);
 
+    // Çıktı Dosyası Kurulumu
     AVFormatContext *out_format_ctx = NULL;
     avformat_alloc_output_context2(&out_format_ctx, NULL, NULL, output_filename);
 
-    const AVCodec *out_codec = avcodec_find_encoder_by_name("libx264");
-    if (!out_codec) {
-        fprintf(stderr, "libx264 enkoderi bulunamadı! Eski yönteme dönülüyor...\n");
-        out_codec = avcodec_find_encoder(AV_CODEC_ID_H264);
-    }
-    
+    // Çıktı Video Akışı ve Enkoder Ayarları
+    const AVCodec *out_codec = avcodec_find_encoder(AV_CODEC_ID_H264);
     AVStream *out_video_stream = avformat_new_stream(out_format_ctx, out_codec);
     AVCodecContext *out_codec_ctx = avcodec_alloc_context3(out_codec);
 
     out_codec_ctx->width = HIGH_WIDTH;
     out_codec_ctx->height = HIGH_HEIGHT;
     out_codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
-    out_codec_ctx->time_base = in_format_ctx->streams[video_stream_idx]->time_base;
+    
+    // Sabit kararlı time_base yapılandırması
+    out_codec_ctx->time_base = (AVRational){1, 90000};
     out_codec_ctx->framerate = av_guess_frame_rate(in_format_ctx, in_format_ctx->streams[video_stream_idx], NULL);
 
     if (out_format_ctx->oformat->flags & AVFMT_GLOBALHEADER) {
         out_codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
     }
-    
-    avcodec_parameters_from_context(out_video_stream->codecpar, out_codec_ctx);
     avcodec_open2(out_codec_ctx, out_codec, NULL);
+    out_video_stream->time_base = out_codec_ctx->time_base;
+    avcodec_parameters_from_context(out_video_stream->codecpar, out_codec_ctx);
 
+    // SES EKLEME: Fedora uyumluluğu için optimize edilmiş akış kopyalama
     AVStream *out_audio_stream = NULL;
     if (audio_stream_idx != -1) {
         out_audio_stream = avformat_new_stream(out_format_ctx, NULL);
-        if (avcodec_parameters_copy(out_audio_stream->codecpar, in_format_ctx->streams[audio_stream_idx]->codecpar) < 0) {
-            fprintf(stderr, "Ses parametreleri kopyalanamadı.\n");
-            return -1;
+        avcodec_parameters_copy(out_audio_stream->codecpar, in_format_ctx->streams[audio_stream_idx]->codecpar);
+        
+        // Fedora ve MP4 konteynerinin reddetmesini önlemek için codec_tag temizliği
+        uint32_t tags[2] = {0};
+        if (av_codec_get_tag2(out_format_ctx->oformat->codec_tag, out_audio_stream->codecpar->codec_id, &tags[0]) > 0) {
+            out_audio_stream->codecpar->codec_tag = tags[0];
+        } else {
+            out_audio_stream->codecpar->codec_tag = 0;
         }
-        out_audio_stream->codecpar->codec_tag = 0;
     }
 
     if (!(out_format_ctx->oformat->flags & AVFMT_NOFILE)) {
         if (avio_open(&out_format_ctx->pb, output_filename, AVIO_FLAG_WRITE) < 0) {
-            fprintf(stderr, "Çıktı dosyası yazılamadı.\n");
+            fprintf(stderr, "Çıktı dosyası yazma modunda açılamadı.\n");
             return -1;
         }
     }
 
     if (avformat_write_header(out_format_ctx, NULL) < 0) {
-        fprintf(stderr, "Header yazılamadı.\n");
+        fprintf(stderr, "Header yazılamadı. Konteyner veya kodek uyuşmazlığı var.\n");
         return -1;
     }
 
+    // Ölçekleyiciler
     struct SwsContext *sws_to_low = sws_getContext(
         in_codec_ctx->width, in_codec_ctx->height, in_codec_ctx->pix_fmt,
         LOW_WIDTH, LOW_HEIGHT, AV_PIX_FMT_YUV420P, SWS_POINT, NULL, NULL, NULL
@@ -119,6 +125,7 @@ int main(int argc, char *argv[]) {
 
     AVPacket *packet = av_packet_alloc();
     AVPacket *out_packet = av_packet_alloc();
+    int64_t video_frame_counter = 0;
 
     while (av_read_frame(in_format_ctx, packet) >= 0) {
         if (packet->stream_index == video_stream_idx) {
@@ -127,12 +134,11 @@ int main(int argc, char *argv[]) {
                     sws_scale(sws_to_low, (const uint8_t *const *)in_frame->data, in_frame->linesize, 0,
                               in_codec_ctx->height, low_frame->data, low_frame->linesize);
 
-                    // DÜZELTME 2: LOW_HEIGHT yerine doğrudan low_frame->height kullanıldı
                     sws_scale(sws_to_high, (const uint8_t *const *)low_frame->data, low_frame->linesize, 0,
-                              low_frame->height, out_frame->data, out_frame->linesize);
+                              LOW_HEIGHT, out_frame->data, out_frame->linesize);
 
-                    out_frame->pts = in_frame->pts;
-                    out_frame->pkt_dts = in_frame->pkt_dts;
+                    // Zaman damgalarını kararlı bir şekilde yeniden hesapla
+                    out_frame->pts = av_rescale_q(video_frame_counter++, (AVRational){1, (int)av_q2d(out_codec_ctx->framerate)}, out_codec_ctx->time_base);
 
                     if (avcodec_send_frame(out_codec_ctx, out_frame) >= 0) {
                         while (avcodec_receive_packet(out_codec_ctx, out_packet) >= 0) {
@@ -145,22 +151,20 @@ int main(int argc, char *argv[]) {
                 }
             }
         } else if (packet->stream_index == audio_stream_idx && out_audio_stream != NULL) {
-            // GStreamer uyuşmazlığını önlemek için zaman damgası kontrolü
+            // GStreamer senkronizasyon hatasını önlemek için PTS kontrolü
             if (packet->pts == AV_NOPTS_VALUE) {
                 packet->pts = 0;
                 packet->dts = 0;
             }
             av_packet_rescale_ts(packet, in_format_ctx->streams[audio_stream_idx]->time_base, out_audio_stream->time_base);
             packet->stream_index = out_audio_stream->index;
-            
-            // Süreç doğruluğu için dts/pts hizalaması
             if (packet->dts > packet->pts) packet->dts = packet->pts;
-            
             av_interleaved_write_frame(out_format_ctx, packet);
         }
         av_packet_unref(packet);
     }
 
+    // Video Enkoder Flush
     avcodec_send_frame(out_codec_ctx, NULL);
     while (avcodec_receive_packet(out_codec_ctx, out_packet) >= 0) {
         av_packet_rescale_ts(out_packet, out_codec_ctx->time_base, out_video_stream->time_base);
@@ -171,16 +175,14 @@ int main(int argc, char *argv[]) {
 
     av_write_trailer(out_format_ctx);
 
+    // Temizlik
     av_packet_free(&packet);
     av_packet_free(&out_packet);
     av_frame_free(&in_frame);
-    
-    if (low_frame->data[0]) av_freep(&low_frame->data[0]);
+    av_freep(&low_frame->data[0]);
     av_frame_free(&low_frame);
-    
-    if (out_frame->data[0]) av_freep(&out_frame->data[0]);
+    av_freep(&out_frame->data[0]);
     av_frame_free(&out_frame);
-    
     sws_freeContext(sws_to_low);
     sws_freeContext(sws_to_high);
     avcodec_free_context(&in_codec_ctx);
