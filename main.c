@@ -145,8 +145,17 @@ int main(int argc, char *argv[]) {
                 }
             }
         } else if (packet->stream_index == audio_stream_idx && out_audio_stream != NULL) {
+            // GStreamer uyuşmazlığını önlemek için zaman damgası kontrolü
+            if (packet->pts == AV_NOPTS_VALUE) {
+                packet->pts = 0;
+                packet->dts = 0;
+            }
             av_packet_rescale_ts(packet, in_format_ctx->streams[audio_stream_idx]->time_base, out_audio_stream->time_base);
             packet->stream_index = out_audio_stream->index;
+            
+            // Süreç doğruluğu için dts/pts hizalaması
+            if (packet->dts > packet->pts) packet->dts = packet->pts;
+            
             av_interleaved_write_frame(out_format_ctx, packet);
         }
         av_packet_unref(packet);
