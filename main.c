@@ -42,18 +42,18 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    // Girdi Video Dekoder Ayarları
+    // Input Video Decoder Settings
     AVCodecParameters *in_codec_par = in_format_ctx->streams[video_stream_idx]->codecpar;
     const AVCodec *in_codec = avcodec_find_decoder(in_codec_par->codec_id);
     AVCodecContext *in_codec_ctx = avcodec_alloc_context3(in_codec);
     avcodec_parameters_to_context(in_codec_ctx, in_codec_par);
     avcodec_open2(in_codec_ctx, in_codec, NULL);
 
-    // Çıktı Dosyası Kurulumu
+    // Output File Setup
     AVFormatContext *out_format_ctx = NULL;
     avformat_alloc_output_context2(&out_format_ctx, NULL, NULL, output_filename);
 
-    // Çıktı Video Akışı ve Enkoder Ayarları
+    // Output Video Stream and Encoder Settings
     const AVCodec *out_codec = avcodec_find_encoder(AV_CODEC_ID_H264);
     AVStream *out_video_stream = avformat_new_stream(out_format_ctx, out_codec);
     AVCodecContext *out_codec_ctx = avcodec_alloc_context3(out_codec);
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     out_codec_ctx->height = HIGH_HEIGHT;
     out_codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
     
-    // Sabit kararlı time_base yapılandırması
+    // Stable time_base configuration
     out_codec_ctx->time_base = (AVRational){1, 90000};
     out_codec_ctx->framerate = av_guess_frame_rate(in_format_ctx, in_format_ctx->streams[video_stream_idx], NULL);
 
@@ -73,13 +73,13 @@ int main(int argc, char *argv[]) {
     out_video_stream->time_base = out_codec_ctx->time_base;
     avcodec_parameters_from_context(out_video_stream->codecpar, out_codec_ctx);
 
-    // SES EKLEME: Fedora uyumluluğu için optimize edilmiş akış kopyalama
+    // AUDIO ADDITION: Streaming transcription optimized for Fedora compatibility.
     AVStream *out_audio_stream = NULL;
     if (audio_stream_idx != -1) {
         out_audio_stream = avformat_new_stream(out_format_ctx, NULL);
         avcodec_parameters_copy(out_audio_stream->codecpar, in_format_ctx->streams[audio_stream_idx]->codecpar);
         
-        // Fedora ve MP4 konteynerinin reddetmesini önlemek için codec_tag temizliği
+        //To prevent Fedora and MP4 container rejection, codec_tag cleanup is necessary.
         uint32_t tags[2] = {0};
         if (av_codec_get_tag2(out_format_ctx->oformat->codec_tag, out_audio_stream->codecpar->codec_id, &tags[0]) > 0) {
             out_audio_stream->codecpar->codec_tag = tags[0];
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    // Ölçekleyiciler
+    // Scaler
     struct SwsContext *sws_to_low = sws_getContext(
         in_codec_ctx->width, in_codec_ctx->height, in_codec_ctx->pix_fmt,
         LOW_WIDTH, LOW_HEIGHT, AV_PIX_FMT_YUV420P, SWS_POINT, NULL, NULL, NULL
@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
                     sws_scale(sws_to_high, (const uint8_t *const *)low_frame->data, low_frame->linesize, 0,
                               LOW_HEIGHT, out_frame->data, out_frame->linesize);
 
-                    // Zaman damgalarını kararlı bir şekilde yeniden hesapla
+                    // Recalculating timestamps consistently.
                     out_frame->pts = av_rescale_q(video_frame_counter++, (AVRational){1, (int)av_q2d(out_codec_ctx->framerate)}, out_codec_ctx->time_base);
 
                     if (avcodec_send_frame(out_codec_ctx, out_frame) >= 0) {
@@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
                 }
             }
         } else if (packet->stream_index == audio_stream_idx && out_audio_stream != NULL) {
-            // GStreamer senkronizasyon hatasını önlemek için PTS kontrolü
+            // PTS control to prevent GStreamer synchronization error
             if (packet->pts == AV_NOPTS_VALUE) {
                 packet->pts = 0;
                 packet->dts = 0;
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
         av_packet_unref(packet);
     }
 
-    // Video Enkoder Flush
+    // Video Encoder Flush
     avcodec_send_frame(out_codec_ctx, NULL);
     while (avcodec_receive_packet(out_codec_ctx, out_packet) >= 0) {
         av_packet_rescale_ts(out_packet, out_codec_ctx->time_base, out_video_stream->time_base);
@@ -175,7 +175,7 @@ int main(int argc, char *argv[]) {
 
     av_write_trailer(out_format_ctx);
 
-    // Temizlik
+    // Cleaning
     av_packet_free(&packet);
     av_packet_free(&out_packet);
     av_frame_free(&in_frame);
