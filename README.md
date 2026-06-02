@@ -44,6 +44,11 @@ sudo dnf swap ffmpeg-free ffmpeg --allowerasing
 sudo dnf install ffmpeg-devel x264 x264-libs libavcodec-freeworld
 ```
 
+
+
+
+
+
 ## If you want to build manually:
 # Standard Build
 ```bash
