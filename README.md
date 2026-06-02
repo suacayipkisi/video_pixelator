@@ -45,16 +45,12 @@ sudo dnf install ffmpeg-devel x264 x264-libs libavcodec-freeworld
 ```
 
 
-
-
-
-
-## If you want to build manually:
-# Standard Build
+# If you want to build manually:
+## Standard Build
 ```bash
 gcc -o pixelator main.c -lavformat -lavcodec -lswscale -lavutil
 ```
-# With Include Path
+## With Include Path
 ```bash
 gcc -o pixelator main.c -I /usr/include/ffmpeg -lavformat -lavcodec -lswscale -lavutil
 ```
