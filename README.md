@@ -62,4 +62,4 @@ gcc -o pixelator main.c -I /usr/include/ffmpeg -lavformat -lavcodec -lswscale -l
 # Technical Analysis
 A 3.5-minute 1080p video (tried: Never Gonna Give You Up) is fully processed in an average of ~60-65 seconds on modern multi-core processors like the Ryzen 7 7735HS, thanks to libx264's multi-threading optimization. The process is entirely CPU-bound and does not encounter disk I/O bottlenecks.
 
-# Aı TOOLS WERE USED IN THIS CODE.
+# AI TOOLS WERE USED IN THIS CODE.

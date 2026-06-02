@@ -51,7 +51,6 @@ int main(int argc, char *argv[]) {
     AVFormatContext *out_format_ctx = NULL;
     avformat_alloc_output_context2(&out_format_ctx, NULL, NULL, output_filename);
 
-    // Yeni satır:
     const AVCodec *out_codec = avcodec_find_encoder_by_name("libx264");
     if (!out_codec) {
         fprintf(stderr, "libx264 enkoderi bulunamadı! Eski yönteme dönülüyor...\n");
@@ -71,7 +70,6 @@ int main(int argc, char *argv[]) {
         out_codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
     }
     
-    // DÜZELTME 3: Önce parametreleri akışa aktar, sonra enkoderi aç
     avcodec_parameters_from_context(out_video_stream->codecpar, out_codec_ctx);
     avcodec_open2(out_codec_ctx, out_codec, NULL);
 
@@ -164,12 +162,10 @@ int main(int argc, char *argv[]) {
 
     av_write_trailer(out_format_ctx);
 
-    // Temizlik
     av_packet_free(&packet);
     av_packet_free(&out_packet);
     av_frame_free(&in_frame);
     
-    // DÜZELTME 1: Güvenli ve sızıntısız temizlik sıralaması
     if (low_frame->data[0]) av_freep(&low_frame->data[0]);
     av_frame_free(&low_frame);
     
