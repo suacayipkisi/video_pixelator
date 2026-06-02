@@ -57,7 +57,7 @@ gcc -o pixelator main.c -I /usr/include/ffmpeg -lavformat -lavcodec -lswscale -l
 
 # How to use:
 ```bash
-./pixelator <input_vide_path> <output_vide_path>
+./pixelator <input_video_path> <output_video_path>
 ```
 
 # Technical Analysis
