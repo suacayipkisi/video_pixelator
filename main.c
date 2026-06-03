@@ -11,7 +11,7 @@
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
-        fprintf(stderr, "Kullanım: %s <girdi_videosu> <cikti_videosu>\n", argv[0]);
+        fprintf(stderr, "Method of use: %s <input_video> <output_video>\n", argv[0]);
         return -1;
     }
 
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
 
     AVFormatContext *in_format_ctx = NULL;
     if (avformat_open_input(&in_format_ctx, input_filename, NULL, NULL) < 0) {
-        fprintf(stderr, "Girdi dosyası açılamadı.\n");
+        fprintf(stderr, "Input video could not be opened.\n");
         return -1;
     }
 
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (video_stream_idx == -1) {
-        fprintf(stderr, "Video akışı bulunamadı.\n");
+        fprintf(stderr, "Video stream could not be finded.\n");
         return -1;
     }
 
@@ -90,13 +90,13 @@ int main(int argc, char *argv[]) {
 
     if (!(out_format_ctx->oformat->flags & AVFMT_NOFILE)) {
         if (avio_open(&out_format_ctx->pb, output_filename, AVIO_FLAG_WRITE) < 0) {
-            fprintf(stderr, "Çıktı dosyası yazma modunda açılamadı.\n");
+            fprintf(stderr, "Output file could not be opened in write mode.\n");
             return -1;
         }
     }
 
     if (avformat_write_header(out_format_ctx, NULL) < 0) {
-        fprintf(stderr, "Header yazılamadı. Konteyner veya kodek uyuşmazlığı var.\n");
+        fprintf(stderr, "Header could not be written. There is a container or codec mismatch.\n");
         return -1;
     }
 
