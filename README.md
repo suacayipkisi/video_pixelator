@@ -23,23 +23,23 @@ sudo pacman -Syu base-devel ffmpeg
 To install the build tools, the `pkg-config` tool that manages nested dependencies, and the full library set that will enable the `libx264` encoder by bypassing H.264 license restrictions on Fedora, run the following steps sequentially in the terminal:
 
 
-# 1. Activate the free and non-free repositories of RPM Fusion.
+#### 1. Activate the free and non-free repositories of RPM Fusion.
 ```bash
 sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 ```
 
-# 2. Install the build tools (gcc, make) and the pkg-config package.
+#### 2. Install the build tools (gcc, make) and the pkg-config package.
 ```bash
 sudo dnf group install "Development Tools"
 sudo dnf install pkgconf-pkg-config
 ```
 
-# 3. Replace Fedora's restricted default FFmpeg package with the full version in RPM Fusion.
+#### 3. Replace Fedora's restricted default FFmpeg package with the full version in RPM Fusion.
 ```bash
 sudo dnf swap ffmpeg-free ffmpeg --allowerasing
 ```
 
-# 4. Install the developer headers and the libx264 engine.
+#### 4. Install the developer headers and the libx264 engine.
 ```bash
 sudo dnf install ffmpeg-devel x264 x264-libs libavcodec-freeworld
 ```
