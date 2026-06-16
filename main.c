@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 
     int video_stream_idx = -1;
     int audio_stream_idx = -1;
-    
+
     for (unsigned int i = 0; i < in_format_ctx->nb_streams; i++) {
         if (in_format_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO && video_stream_idx == -1) {
             video_stream_idx = i;
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     out_codec_ctx->width = HIGH_WIDTH;
     out_codec_ctx->height = HIGH_HEIGHT;
     out_codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
-    
+
     // Stable time_base configuration
     out_codec_ctx->time_base = (AVRational){1, 90000};
     out_codec_ctx->framerate = av_guess_frame_rate(in_format_ctx, in_format_ctx->streams[video_stream_idx], NULL);
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
     if (audio_stream_idx != -1) {
         out_audio_stream = avformat_new_stream(out_format_ctx, NULL);
         avcodec_parameters_copy(out_audio_stream->codecpar, in_format_ctx->streams[audio_stream_idx]->codecpar);
-        
+
         //To prevent Fedora and MP4 container rejection, codec_tag cleanup is necessary.
         uint32_t tags[2] = {0};
         if (av_codec_get_tag2(out_format_ctx->oformat->codec_tag, out_audio_stream->codecpar->codec_id, &tags[0]) > 0) {
@@ -192,6 +192,8 @@ int main(int argc, char *argv[]) {
         avio_closep(&out_format_ctx->pb);
     }
     avformat_free_context(out_format_ctx);
-
+    for(int i=0: i<5: i++){
+        printf("\nDone!");
+    }
     return 0;
 }
