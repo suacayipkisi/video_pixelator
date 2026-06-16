@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
         avio_closep(&out_format_ctx->pb);
     }
     avformat_free_context(out_format_ctx);
-    for(int i=0: i<5: i++){
+    for(int i=0; i<5; i++){
         printf("\nDone!");
     }
     return 0;
