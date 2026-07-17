@@ -1,3 +1,13 @@
+# About Feature of This Project
+
+- Currently this project supports only a spesific file type (.mp4) and a spesific resolution (1080p to pixelated 1080p).  
+- I will recreate this project with c++. It will support other file types and resolution automatically.  
+- Not only video will be pixelated but also I will work on audio(like 8-bit retro sound maybe), currently audio output is literally copy of the original video.  
+- Also there will be an UI and ready packages for three main linux distro (debian, fedora, arch) and also win11 (linux packages are priory goal).  
+- The first stage of the roadmap includes only video but after than audio and image stage will be succeed.
+- This project will never became a video editor projects. I aim mostly creating a converter. Also this project is a lesson for me to learning details about video decoder-encoder structure.
+
+
 # C Video Pixelator (with FFmpeg API)
 
 This project converts high-resolution videos ($1920\times 1080$) into sharp, retro pixel art style ($32 \times 18$) in real-time using C language and the **FFmpeg API**.
@@ -63,4 +73,4 @@ gcc -o pixelator main.c -I /usr/include/ffmpeg -lavformat -lavcodec -lswscale -l
 # Technical Analysis
 A 3.5-minute 1080p video (tried: Never Gonna Give You Up) is fully processed in an average of ~60-65 seconds on modern multi-core processors like the Ryzen 7 7735HS, thanks to libx264's multi-threading optimization. The process is entirely CPU-bound and does not encounter disk I/O bottlenecks.
 
-# AI TOOLS WERE USED IN THIS CODE.
+# AI TOOLS WERE USED IN THIS CODE (For "C" version)
