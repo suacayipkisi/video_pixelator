@@ -54,6 +54,11 @@ sudo dnf swap ffmpeg-free ffmpeg --allowerasing
 sudo dnf install ffmpeg-devel x264 x264-libs libavcodec-freeworld
 ```
 
+### Debian and Ubuntu (debian based)
+```bash
+sudo apt update && sudo apt install -y libavformat-dev libavcodec-dev libswscale-dev libavutil-dev pkg-config cmake build-essential
+sudo apt update && sudo apt install ffmpeg
+```
 
 # If you want to build manually:
 ## Standard Build
