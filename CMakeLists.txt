@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(AVFORMAT REQUIRED libavformat)
 pkg_check_modules(AVCODEC REQUIRED libavcodec)
-pkg_check_modules(SWSScale REQUIRED libswscale)
+pkg_check_modules(SWSCALE REQUIRED libswscale)
 pkg_check_modules(AVUTIL REQUIRED libavutil)
 
 add_executable(video_pixelator main.c)
