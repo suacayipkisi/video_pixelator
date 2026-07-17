@@ -1,4 +1,4 @@
-# About Feature of This Project
+# About Future of This Project
 
 - Currently this project supports only a spesific file type (.mp4) and a spesific resolution (1080p to pixelated 1080p).  
 - I will recreate this project with c++. It will support other file types and resolution automatically.  
