@@ -23,6 +23,8 @@ Vide synchronization (PTS) and the original audio stream (with zero loss using t
 
 ## Installing Dependencies
 
+If you have a execution file just ffmpeg is enough for all distros but if you don't have an execution file, these dependencies are necessary to build.
+
 ### Arch Linux / CachyOS
 ```bash
 sudo pacman -Syu base-devel ffmpeg
