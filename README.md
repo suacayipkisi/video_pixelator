@@ -7,6 +7,7 @@
 - The first stage of the roadmap includes only video but after than audio and image stage will be succeed.
 - This project will never became a video editor projects. I aim mostly creating a converter. Also this project is a lesson for me to learning details about video decoder-encoder structure.
 
+### C version moved another branch. Now, main branch is C++.
 
 # C Video Pixelator (with FFmpeg API)
 
